@@ -44,6 +44,20 @@ exports.studentController.get("/", (req, res) => __awaiter(void 0, void 0, void 
         return res.status(200).send(findAllStudents);
     }
 }));
+exports.studentController.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const idStudent = req.params.id;
+    const findOneStudent = yield prisma.student.findUnique({
+        where: {
+            id: idStudent
+        },
+    });
+    if (!findOneStudent) {
+        return res.status(401).send({ message: "Error on search student." });
+    }
+    else {
+        return res.status(200).send(findOneStudent);
+    }
+}));
 exports.studentController.post("/create", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     const creatingStudent = yield prisma.student.create({
@@ -82,10 +96,10 @@ exports.studentController.post("/create/csv", multerConfig.single('file'), (req,
                 const studentLineSplit = line.split(",");
                 students.push({
                     rm_aluno: studentLineSplit[0],
-                    nome_aluno: studentLineSplit[1],
-                    modulo_aluno: studentLineSplit[2],
-                    curso_aluno: studentLineSplit[3],
-                    turno_aluno: studentLineSplit[4]
+                    nome_aluno: studentLineSplit[1].toUpperCase(),
+                    modulo_aluno: studentLineSplit[2].toUpperCase(),
+                    curso_aluno: studentLineSplit[3].toUpperCase(),
+                    turno_aluno: studentLineSplit[4].toUpperCase()
                 });
             }
             finally {
@@ -105,19 +119,39 @@ exports.studentController.post("/create/csv", multerConfig.single('file'), (req,
     });
     return res.send(studentsResult);
 }));
-exports.studentController.put("/update/:rm", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const rmStudent = req.params.rm;
+exports.studentController.put("/update/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const idStudent = req.params.id;
     const student = req.body;
     const studentUpdated = yield prisma.student.update({
-        where: {
-            rm_aluno: student.rm_aluno
-        },
         data: {
             rm_aluno: student.rm_aluno,
             nome_aluno: student.nome_aluno,
             modulo_aluno: student.modulo_aluno,
             curso_aluno: student.curso_aluno,
             turno_aluno: student.turno_aluno
+        },
+        where: {
+            id: idStudent
         }
     });
+    if (!studentUpdated) {
+        return res.status(400).send({ message: "An error occured on update!" });
+    }
+    else {
+        return res.status(200).send(studentUpdated);
+    }
+}));
+exports.studentController.delete("/delete/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const idStudent = req.params.id;
+    const studentDeleted = yield prisma.student.delete({
+        where: {
+            id: idStudent
+        }
+    });
+    if (!studentDeleted) {
+        return res.status(401).send({ message: "An error occured on delete" });
+    }
+    else {
+        return res.status(200).send(studentDeleted);
+    }
 }));
