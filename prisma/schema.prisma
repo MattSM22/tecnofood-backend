@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Adm {
+  id         String  @id @default(uuid())
+  login_adm  String
+  senha_adm  String
+  super_user Boolean
+}
+
+model Meal {
+  id            String   @id @default(uuid())
+  student_rm    String   @unique
+  data_refeicao DateTime @default(now())
+  qtd_refeicao  Int
+
+  Student Student @relation(fields: [student_rm], references: [id])
+}
+
+model Student {
+  id           String @id @unique @default(uuid())
+  rm_aluno     String
+  nome_aluno   String
+  modulo_aluno String
+  curso_aluno  String
+  turno_aluno  String
+
+  meal Meal[]
+}
