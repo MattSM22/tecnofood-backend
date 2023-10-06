@@ -13,13 +13,13 @@ const prisma = new PrismaClient({
 interface MealTypes {
   id?: string;
   student_rm: string;
-  data_refeicao: Date | null | any | undefined | unknown;
+  data_refeicao?: Date;
   qtd_refeicao: number;
 }
 
 MealController.post("/create", async (req, res) => {
   const body: MealTypes = req.body;
-  const studentExists = await prisma.student.findMany({
+  const studentExists = await prisma.student.findUnique({
     where: {
       rm_aluno: body.student_rm
     },
@@ -40,7 +40,7 @@ MealController.post("/create", async (req, res) => {
   }
 });
 
-MealController.get("/", async (req, res) => {
+MealController.get("/list", async (req, res) => {
   const selectAllMeal = await prisma.meal.findMany({
     include: {
       Student: {
@@ -56,10 +56,12 @@ MealController.get("/", async (req, res) => {
       }
     }
   });
-  if (selectAllMeal) {
-    return res.status(200).send(selectAllMeal);
+  if (!selectAllMeal) {
+    return res.status(401).send({ message: "No have connection with Database or table please verify your connection!" });
+  } else if (selectAllMeal.length == 0) {
+    return res.status(400).send({ message: "No have records on this table, please make one record before use this route!" });
   } else {
-    return res.status(400).send({ message: "Don't have any record of meal!" });
+    return res.status(200).send(selectAllMeal);
   }
 });
 
@@ -100,23 +102,26 @@ MealController.get("/report", async (req, res) => {
     rows.push(meal.Student.turno_aluno);
     rows.push(meal.data_refeicao.toString());
     rows.push(meal.qtd_refeicao);
-
     body.push(rows);
   };
 
   const docDefinitions: TDocumentDefinitions = {
-    defaultStyle: { font: "Helvetica" },
-    header: [{text: "Relatório de Refeições", alignment: 'center', marginTop: 20, marginBottom: 30}],
+    defaultStyle: { font: "Helvetica", bold: true },
+    header: [{ text: "Relatório de Refeições", alignment: 'center', marginTop: 20, marginBottom: 30 }],
     content: [{
       layout: 'lightHorizontalLines',
+      columnGap: 10,
+      lineHeight: 2,
+      font: "Roboto Mono", 
       table: {
         body: [
           ["RM do Aluno", "Nome do Aluno", "Curso do aluno", "Turno do aluno", "Data da refeição", "Quantidade fornecida"],
           ...body
         ],
+        
       }
     }],
-    footer: [{text: "São Paulo, SP - Brasil", alignment: 'center'}]
+    footer: [{ text: "São Paulo, SP - Brasil", alignment: 'center' }]
   };
 
   const pdfDoc = printer.createPdfKitDocument(docDefinitions);

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 
-export const admController = Router();
+export const AdmController = Router();
 
 interface AdminTypes {
   id?: string | undefined;
@@ -14,16 +14,18 @@ const prisma = new PrismaClient({
   log: ['query'],
 });
 
-admController.get("/", async (req, res) => {
+AdmController.get("/list", async (req, res) => {
   const findAll = await prisma.adm.findMany();
-  if (findAll.length === 0) {
-    return res.status(400).send({message: "Error searching for administrators."});
+  if (!findAll){
+    return res.status(401).send({message: "No have connection with Database or table please verify your connection!"})
+  }else if (findAll.length === 0) {
+    return res.status(400).send({message: "No have records on this table, please make one record before use this route!"});
   } else {
     return res.status(200).send(findAll);
   }
 });
 
-admController.post("/create", async (req, res) => {
+AdmController.post("/create", async (req, res) => {
   const body: AdminTypes = req.body;
   const createAdm = await prisma.adm.create({
     data: {
@@ -41,7 +43,7 @@ admController.post("/create", async (req, res) => {
   }
 });
 
-admController.put("/update/:id", async (req, res) => {
+AdmController.put("/update/:id", async (req, res) => {
   const idAdm = req.params.id;
   const body: AdminTypes = req.body;
   const updateAdm = await prisma.adm.update({
@@ -62,7 +64,7 @@ admController.put("/update/:id", async (req, res) => {
   }
 });
 
-admController.delete("/delete/:id", async (req, res) => {
+AdmController.delete("/delete/:id", async (req, res) => {
   const idAdm = req.params.id;
   const deletedAdm = await prisma.adm.deleteMany({
     where: {
